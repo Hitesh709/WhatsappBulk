@@ -1,0 +1,2 @@
+import Link from "next/link";
+export default function ReportsPage(){return <main className="shell"><header className="top"><div><div className="brand">Message Reports</div><div className="label">Delivery, read, reply and failure tracking</div></div><Link className="btn secondary" href="/">Dashboard</Link></header><section className="card section"><h2>Reports</h2><p>Webhook-based delivery and reply analytics will appear here after the WhatsApp Cloud API is connected.</p></section></main>}
