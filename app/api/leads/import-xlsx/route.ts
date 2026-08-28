@@ -1,28 +1,11 @@
 import { NextResponse } from "next/server";
 import * as XLSX from "xlsx";
 import { prisma } from "@/lib/prisma";
-
-export const runtime = "nodejs";
-function clean(v: unknown) { return String(v ?? "").trim(); }
-function phone(v: unknown) { return clean(v).replace(/\D/g, ""); }
-function yes(v: unknown) { return ["true","yes","y","1","opted_in","consented"].includes(clean(v).toLowerCase()); }
-
-export async function POST(req: Request) {
-  const form = await req.formData();
-  const file = form.get("file");
-  if (!(file instanceof File)) return NextResponse.json({ error: "Excel file is required" }, { status: 400 });
-  const workbook = XLSX.read(Buffer.from(await file.arrayBuffer()), { type: "buffer", cellDates: true });
-  const sheet = workbook.Sheets[workbook.SheetNames[0]];
-  if (!sheet) return NextResponse.json({ error: "Workbook has no sheets" }, { status: 400 });
-  const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, { defval: "" });
-  let imported = 0, skipped = 0;
-  for (const row of rows) {
-    const normalized = Object.fromEntries(Object.entries(row).map(([k,v]) => [k.toLowerCase().trim(), v]));
-    const p = phone(normalized.phone ?? normalized.mobile ?? normalized.whatsapp ?? normalized["phone number"]);
-    if (!p) { skipped++; continue; }
-    const consent = yes(normalized.consent ?? normalized["whatsapp consent"] ?? normalized.opted_in);
-    await prisma.lead.upsert({ where: { phone: p }, update: { name: clean(normalized.name ?? normalized.full_name ?? normalized.customer_name) || "Customer", source: clean(normalized.source) || "XLSX_IMPORT" }, create: { phone: p, name: clean(normalized.name ?? normalized.full_name ?? normalized.customer_name) || "Customer", source: clean(normalized.source) || "XLSX_IMPORT", consent, consentAt: consent ? new Date() : null, optedOut: false } });
-    imported++;
-  }
-  return NextResponse.json({ imported, skipped, sheet: workbook.SheetNames[0], rows: rows.length });
-}
+export const runtime="nodejs";
+const clean=(v:unknown)=>String(v??"").trim();
+const norm=(v:string)=>v.toLowerCase().replace(/[^a-z0-9]/g,"");
+const phone=(v:unknown)=>clean(v).replace(/\D/g,"");
+const yes=(v:unknown)=>["true","yes","y","1","optedin","consented"].includes(norm(clean(v)));
+const aliases={name:["name","fullname","customername","customer"],phone:["phone","phonenumber","mobile","mobileno","mobilenumber","whatsapp","whatsappnumber","contactnumber"],consent:["consent","whatsappconsent","whatsappoptin","optin","optedin","marketingconsent"],source:["source","leadsource","campaign","utm_source"]};
+function find(row:Record<string,unknown>, keys:string[]){const entries=Object.entries(row);for(const key of keys){const hit=entries.find(([k])=>norm(k)===key);if(hit)return hit[1]}return ""}
+export async function POST(req:Request){const form=await req.formData();const file=form.get("file");if(!(file instanceof File))return NextResponse.json({error:"Excel file is required"},{status:400});const wb=XLSX.read(Buffer.from(await file.arrayBuffer()),{type:"buffer",cellDates:true});const sheet=wb.Sheets[wb.SheetNames[0]];if(!sheet)return NextResponse.json({error:"Workbook has no sheets"},{status:400});const rows=XLSX.utils.sheet_to_json<Record<string,unknown>>(sheet,{defval:""});let imported=0,skipped=0;for(const row of rows){const p=phone(find(row,aliases.phone));if(!p){skipped++;continue}const consent=yes(find(row,aliases.consent));const name=clean(find(row,aliases.name))||"Customer";const source=clean(find(row,aliases.source))||"XLSX_IMPORT";await prisma.lead.upsert({where:{phone:p},update:{name,source},create:{phone:p,name,source,consent,consentAt:consent?new Date():null,optedOut:false}});imported++}return NextResponse.json({imported,skipped,rows:rows.length,sheet:wb.SheetNames[0]})}
