@@ -1,0 +1,2 @@
+import Link from "next/link";
+export default function TemplatesPage(){return <main className="shell"><header className="top"><div><div className="brand">Templates</div><div className="label">Approved WhatsApp message templates</div></div><Link className="btn secondary" href="/">Dashboard</Link></header><section className="card section"><h2>Template management</h2><p>Connect your Meta-approved templates here. Free-form promotional bulk messages will not be sent by this platform.</p></section></main>}
