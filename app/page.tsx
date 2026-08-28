@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 
 async function stats() {
@@ -22,7 +23,12 @@ export default async function Home() {
       <div className="card"><div className="label">Campaigns</div><div className="metric">{s.campaigns.toLocaleString()}</div></div>
       <div className="card"><div className="label">Messages sent</div><div className="metric">{s.sent.toLocaleString()}</div></div>
     </section>
-    <section className="card section"><h2>Campaign workflow</h2><div className="actions"><button className="btn">Import leads</button><button className="btn secondary">Create campaign</button><button className="btn secondary">Templates</button><button className="btn secondary">Message reports</button></div></section>
+    <section className="card section"><h2>Campaign workflow</h2><div className="actions">
+      <Link className="btn" href="/import">Import leads</Link>
+      <Link className="btn secondary" href="/campaigns">Create campaign</Link>
+      <Link className="btn secondary" href="/templates">Templates</Link>
+      <Link className="btn secondary" href="/reports">Message reports</Link>
+    </div></section>
     <section className="card section"><h2>Rules built into the platform</h2><table className="table"><tbody>
       <tr><td>WhatsApp consent required</td><td className="ok">ENFORCED</td></tr>
       <tr><td>Opted-out contacts suppressed</td><td className="ok">ENFORCED</td></tr>
