@@ -1,38 +1,9 @@
 "use client";
-
-import { FormEvent, useEffect, useState } from "react";
-
-type Campaign = { id: string; name: string; templateName: string; language: string; status: string; createdAt: string };
-
-export default function CampaignsPage() {
-  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
-  const [name, setName] = useState("");
-  const [templateName, setTemplateName] = useState("");
-  const [language, setLanguage] = useState("en");
-  const [notice, setNotice] = useState("");
-
-  async function load() {
-    const r = await fetch("/api/campaigns");
-    if (r.ok) setCampaigns(await r.json());
-  }
-  useEffect(() => { load(); }, []);
-
-  async function create(e: FormEvent) {
-    e.preventDefault(); setNotice("");
-    const r = await fetch("/api/campaigns", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, templateName, language }) });
-    const data = await r.json();
-    if (!r.ok) return setNotice(data.error || "Could not create campaign");
-    setName(""); setTemplateName(""); setNotice("Campaign created successfully."); load();
-  }
-
-  return <main className="shell">
-    <header className="top"><div><div className="brand">Campaign Builder</div><div className="label">Build campaigns for consented WhatsApp leads</div></div><a className="btn secondary" href="/">Dashboard</a></header>
-    <section className="card section"><h2>Create campaign</h2><form className="form" onSubmit={create}>
-      <label>Campaign name<input value={name} onChange={e => setName(e.target.value)} placeholder="August customer offer" required /></label>
-      <label>Approved template name<input value={templateName} onChange={e => setTemplateName(e.target.value)} placeholder="customer_offer" required /></label>
-      <label>Language<select value={language} onChange={e => setLanguage(e.target.value)}><option value="en">English</option><option value="hi">Hindi</option><option value="gu">Gujarati</option></select></label>
-      <button className="btn" type="submit">Create campaign</button>
-    </form>{notice && <p className="label">{notice}</p>}</section>
-    <section className="card section"><h2>Your campaigns</h2>{campaigns.length === 0 ? <p className="label">No campaigns yet.</p> : <table className="table"><thead><tr><th>Name</th><th>Template</th><th>Language</th><th>Status</th></tr></thead><tbody>{campaigns.map(c => <tr key={c.id}><td>{c.name}</td><td>{c.templateName}</td><td>{c.language}</td><td>{c.status}</td></tr>)}</tbody></table>}</section>
-  </main>;
-}
+import { FormEvent,useEffect,useState } from "react";
+import Link from "next/link";
+type Campaign={id:string;name:string;templateName:string;language:string;status:string;createdAt:string};
+function Nav(){return <nav className="nav"><Link href="/">Overview</Link><Link href="/leads">Leads</Link><Link href="/import">Import</Link><Link className="active" href="/campaigns">Campaigns</Link><Link href="/templates">Templates</Link><Link href="/reports">Reports</Link><Link href="/settings">Settings</Link></nav>}
+export default function CampaignsPage(){const[campaigns,setCampaigns]=useState<Campaign[]>([]),[name,setName]=useState(""),[templateName,setTemplateName]=useState(""),[language,setLanguage]=useState("en"),[notice,setNotice]=useState(""),[eligible,setEligible]=useState(0);async function load(){const r=await fetch("/api/campaigns");if(r.ok)setCampaigns(await r.json())}useEffect(()=>{load();fetch("/api/leads?status=consented").then(r=>r.json()).then(d=>setEligible(d.stats?.consented??0)).catch(()=>{})},[]);async function create(e:FormEvent){e.preventDefault();setNotice("");const r=await fetch("/api/campaigns",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name,templateName,language})});const data=await r.json();if(!r.ok)return setNotice(data.error||"Could not create campaign");setName("");setTemplateName("");setNotice("Campaign created. Review the audience before sending.");load()}return <main className="shell"><header className="top"><div><div className="brand">Campaign Builder <span className="version">V2</span></div><div className="label">Create, review and prepare campaigns for eligible WhatsApp leads.</div></div><Link className="btn secondary" href="/">Dashboard</Link></header><Nav/>
+<section className="miniGrid grid"><div><strong>01</strong><div>Audience</div><span className="ok">{eligible.toLocaleString()} eligible</span></div><div><strong>02</strong><div>Template</div><span className="ok">Meta approved</span></div><div><strong>03</strong><div>Review</div><span className="warn">Required</span></div><div><strong>04</strong><div>Send</div><span className="warn">API setup</span></div></section>
+<section className="card section"><h2>Create campaign</h2><p className="label">A campaign can only target leads that have explicit WhatsApp consent and have not opted out.</p><form className="form" onSubmit={create}><label>Campaign name<input value={name} onChange={e=>setName(e.target.value)} placeholder="August customer offer" required/></label><label>Approved template name<input value={templateName} onChange={e=>setTemplateName(e.target.value)} placeholder="customer_offer" required/></label><label>Language<select value={language} onChange={e=>setLanguage(e.target.value)}><option value="en">English</option><option value="hi">Hindi</option><option value="gu">Gujarati</option></select></label><button className="btn" type="submit">Create campaign</button></form>{notice&&<p className="label">{notice}</p>}</section>
+<section className="card section"><div className="top" style={{marginBottom:8}}><div><h2>Your campaigns</h2><div className="label">Use Reports after delivery is connected.</div></div><Link className="btn secondary" href="/reports">View reports</Link></div>{campaigns.length===0?<p className="label">No campaigns yet. Create your first approved-template campaign above.</p>:<div style={{overflowX:"auto"}}><table className="table"><thead><tr><th>Name</th><th>Template</th><th>Language</th><th>Status</th><th>Created</th></tr></thead><tbody>{campaigns.map(c=><tr key={c.id}><td><b>{c.name}</b></td><td>{c.templateName}</td><td>{c.language}</td><td>{c.status}</td><td>{new Date(c.createdAt).toLocaleDateString()}</td></tr>)}</tbody></table></div>}</section></main>}
