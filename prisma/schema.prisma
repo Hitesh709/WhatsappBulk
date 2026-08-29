@@ -33,21 +33,21 @@ model Campaign {
 }
 
 model Message {
-  id           String    @id @default(cuid())
-  leadId       String
-  campaignId   String
-  whatsappId   String?
-  status       String    @default("QUEUED")
-  errorCode    String?
-  errorMessage String?
-  sentAt       DateTime?
-  deliveredAt  DateTime?
-  readAt       DateTime?
-  repliedAt    DateTime?
-  createdAt    DateTime  @default(now())
-  lead         Lead      @relation(fields: [leadId], references: [id], onDelete: Cascade)
-  campaign     Campaign  @relation(fields: [campaignId], references: [id], onDelete: Cascade)
-
+  id             String   @id @default(cuid())
+  leadId         String
+  campaignId     String
+  whatsappId     String?
+  providerMessageId String?
+  status         String   @default("QUEUED")
+  errorCode      String?
+  errorMessage   String?
+  sentAt         DateTime?
+  deliveredAt    DateTime?
+  readAt         DateTime?
+  repliedAt      DateTime?
+  createdAt      DateTime @default(now())
+  lead           Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  campaign      Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
   @@index([campaignId, status])
   @@index([leadId, status])
 }
