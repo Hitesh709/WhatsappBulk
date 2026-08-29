@@ -1,7 +1,7 @@
 import Link from "next/link";
 
-function status(value?: string) { return value ? "CONFIGURED" : "NOT CONFIGURED"; }
-function cls(value?: string) { return value ? "ok" : "warn"; }
+function status(value: boolean) { return value ? "CONFIGURED" : "NOT CONFIGURED"; }
+function cls(value: boolean) { return value ? "ok" : "warn"; }
 
 export default function SettingsPage() {
   const items = [
